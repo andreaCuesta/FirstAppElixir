@@ -21,6 +21,34 @@ defmodule DungeonCrawl.CLI.BaseCommands do
         {option, _} = Integer.parse(answer)
         option - 1
     end
+    
+    def ask_for_option(options) do
+        answer =
+            options
+            |> display_options
+            |> generate_question
+            |> Shell.prompt
+            
+        with {option, _} <- Integer.parse(answer),
+            chosen when chosen != nil <- Enum.at(options, option - 1) do
+          chosen
+        else
+            :error -> retry(options)
+            nil -> retry(options)
+        end    
+    end
+    
+    def retry(options) do
+        display_error("Invalid option")
+        ask_for_option(options)
+    end
+    
+    def display_error(message) do
+        Shell.cmd("clear")
+        Shell.error(message)
+        Shell.prompt("Press Enter to continue.")
+        Shell.cmd("clear")
+    end
 end
 
 # Explanation of the functions, the examples are based on hero_choice
@@ -36,4 +64,13 @@ end
 
 # parse_answer function
 # It tries to parse an integer from the user input, then subtracts one to get the index # of the hero
+
+# ask_for_option function
+# Use different functions that helps it to ask the user for an option, between many 
+# posibilities and manage the answer, at the end return the option selected. It has 
+# three parts:
+# 1. we display options to the user and get an answer
+# 2. we use "with" to parse and find the user’s chosen option
+# 3. we use the else block of with to handle invalid answers, asking the user to try
+# again with the function retry .
 
