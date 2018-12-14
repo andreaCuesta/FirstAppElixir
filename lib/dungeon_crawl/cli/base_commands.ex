@@ -16,10 +16,36 @@ defmodule DungeonCrawl.CLI.BaseCommands do
         options = Enum.join(1..Enum.count(options), ",")
         "Which one? [#{options}]\n"
     end
+        
+    def ask_for_index(options) do
+        answer =
+            options
+            |> display_options
+            |> generate_question
+            |> Shell.prompt
+            |> Integer.parse
+            
+        case answer do
+            :error ->
+                display_invalid_option()
+                ask_for_index(options)
+            {option, _} ->
+                option - 1
+        end
+    end
     
-    def parse_answer(answer) do
-        {option, _} = Integer.parse(answer)
-        option - 1
+    def display_invalid_option do
+        Shell.cmd("clear")
+        Shell.error("Invalid option.")
+        Shell.prompt("Press Enter to try again.")
+        Shell.cmd("clear")
+    end
+    
+    def ask_for_option(options) do
+        index = ask_for_index(options)
+        chosen_option = Enum.at(options, index)
+        chosen_option
+            || (display_invalid_option() && ask_for_option(options))
     end
 end
 
@@ -36,4 +62,17 @@ end
 
 # parse_answer function
 # It tries to parse an integer from the user input, then subtracts one to get the index # of the hero
+
+# ask_for_index function
+# asks the user to input a number that will be used as an index to find the correct
+# option. We use Integer.parse/1 and check with case if the user has typed a valid
+# number. We display an error message with display_invalid_option/0 and make the user
+# try again when the number is invalid. If the user inputs a valid number, we just
+# return the number
+
+# ask_for_option function
+# Using Enum.at/2 we try to find the option with the index input by the user. It
+# returns nil when it doesn’t find an existing index. Remember, the nil value is falsy.
+# We return chose_option when it’s truthy. When it’s not, we use the operator || to
+# display the invalid option message and ask the user to try again.
 
