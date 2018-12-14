@@ -17,9 +17,40 @@ defmodule DungeonCrawl.CLI.BaseCommands do
         "Which one? [#{options}]\n"
     end
     
-    def parse_answer(answer) do
-        {option, _} = Integer.parse(answer)
-        option - 1
+    def parse_answer!(answer) do
+        case Integer.parse(answer) do
+            :error ->
+                raise DungeonCrawl.CLI.InvalidOptionError
+            {option, _} ->
+                option - 1
+        end    
+    end
+    
+    def find_option_by_index!(index, options) do
+        Enum.at(options, index)
+            || raise DungeonCrawl.CLI.InvalidOptionError
+    end
+    
+    def ask_for_option(options) do
+        try do
+            options
+            |> display_options
+            |> generate_question
+            |> Shell.prompt
+            |> parse_answer!
+            |> find_option_by_index!(options)
+        rescue
+            e in DungeonCrawl.CLI.InvalidOptionError ->
+            display_error(e)
+            ask_for_option(options)
+        end
+    end
+    
+    def display_error(e) do
+        Shell.cmd("clear")
+        Shell.error(e.message)
+        Shell.prompt("Press Enter to continue.")
+        Shell.cmd("clear")
     end
 end
 
@@ -34,6 +65,24 @@ end
 # generate_question function
 # options = "1,2,3" (result of apply Enum.join)
 
-# parse_answer function
+# parse_answer! function
 # It tries to parse an integer from the user input, then subtracts one to get the index # of the hero
+
+# find_option_by_index! function
+# It get the corresponding option according to the index. If Enum.at(options, index) 
+# returns a falsy value it raise DungeonCrawl.CLI.InvalidOptionError. Remember that nil
+# is a falsy value
+
+# "raise" -> is used in parse_answer! and find_option_by_index!, and it expects an
+# exception structure. When raise is called, it stops the function’s execution. If no
+# rescue is used, the program stops showing the stack trace.
+
+# ask_for_option function
+# use different functions that helps it to ask the user for an option, between many 
+# posibilities and manage the answer, at the end return the option selected. 
+# In the try code block, we created the happy path of the pipeline of functions. In the
+# rescue block we matched DungeonCrawl.CLI.InvalidOptionError and put the struct in a
+# variable e . We used the display_error/1 function to show the error message. We also
+# forced the user to try again, making a recursive call.
+
 

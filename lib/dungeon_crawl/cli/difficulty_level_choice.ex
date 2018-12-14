@@ -6,14 +6,7 @@ defmodule DungeonCrawl.CLI.DifficultyLevelChoice do
         Shell.cmd("clear")
         Shell.info("Start by choosing the difficulty level:")
         
-        levels = ["easy", "medium", "hard"]
-        find_level_by_index = &Enum.at(levels, &1)
-    
-        display_options(levels)
-        |> generate_question
-        |> Shell.prompt
-        |> parse_answer
-        |> find_level_by_index.()
+        ask_for_option(["easy", "medium", "hard"])
         |> set_rooms_chance(rooms, 0)
         
     end
@@ -60,7 +53,7 @@ defmodule DungeonCrawl.CLI.DifficultyLevelChoice do
     
     
     defp set_rooms_chance("hard", [ head = %DungeonCrawl.Room{type: "exit"} | tail], range_start) do
-        range = range_start..range_start + 4
+        range = range_start..range_start + 3
         room = %DungeonCrawl.Room{
             description: head.description,
             actions: head.actions,
@@ -68,7 +61,7 @@ defmodule DungeonCrawl.CLI.DifficultyLevelChoice do
             type: head.type,
             chance: range
             }
-        [ room | set_rooms_chance("hard", tail, range_start + 5)]
+        [ room | set_rooms_chance("hard", tail, range_start + 4)]
     end
     defp set_rooms_chance("hard", [ head = %DungeonCrawl.Room{type: "hurt"} | tail], range_start) do
         range = range_start..range_start + 15
